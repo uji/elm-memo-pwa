@@ -42,7 +42,7 @@ type Msg
     = PressCreate
     | PressHome
     | CreateMemo
-    | DeleteMemo Memo
+    | PressDelete Memo
     | Title String
     | Content String
 
@@ -59,7 +59,7 @@ update msg model =
         CreateMemo ->
             ( { page = Home, memos = List.append model.memos [ model.memo ], memo = { id = 1, title = "", content = "" } }, Cmd.none )
 
-        DeleteMemo memo ->
+        PressDelete memo ->
             ( { model | memos = remove memo model.memos }, Cmd.none )
 
         Title title ->
@@ -119,7 +119,7 @@ memoarticle memo =
             []
             [ text "Edit" ]
         , button
-            [ onClick (DeleteMemo memo) ]
+            [ onClick (PressDelete memo) ]
             [ text "Delete" ]
         ]
 
