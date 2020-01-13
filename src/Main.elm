@@ -42,6 +42,8 @@ type Msg
     = PressCreate
     | PressHome
     | CreateMemo
+    | PressEdit Memo
+    | EditMemo
     | PressDelete Memo
     | Title String
     | Content String
@@ -54,9 +56,23 @@ update msg model =
             ( { model | page = Create }, Cmd.none )
 
         PressHome ->
-            ( { model | page = Home }, Cmd.none )
+            case model.page of
+                Home ->
+                    ( model, Cmd.none )
+
+                Create ->
+                    ( { model | page = Home }, Cmd.none )
+
+                Edit ->
+                    ( { model | page = Home, memos = model.memos |> List.append [ model.memo ] }, Cmd.none )
 
         CreateMemo ->
+            ( { page = Home, memos = List.append model.memos [ model.memo ], memo = { id = 1, title = "", content = "" } }, Cmd.none )
+
+        PressEdit memo ->
+            ( { model | page = Edit, memo = memo, memos = remove memo model.memos }, Cmd.none )
+
+        EditMemo ->
             ( { page = Home, memos = List.append model.memos [ model.memo ], memo = { id = 1, title = "", content = "" } }, Cmd.none )
 
         PressDelete memo ->
@@ -93,7 +109,11 @@ view model =
                     ]
 
             Edit ->
-                section [] []
+                section []
+                    [ viewInput "text" "title" model.memo.title Title
+                    , viewInput "text" "content" model.memo.content Content
+                    , button [ onClick EditMemo ] [ text "Update" ]
+                    ]
         ]
 
 
@@ -116,7 +136,7 @@ memoarticle memo =
             , p [] [ text memo.content ]
             ]
         , button
-            []
+            [ onClick (PressEdit memo) ]
             [ text "Edit" ]
         , button
             [ onClick (PressDelete memo) ]
