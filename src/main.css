@@ -20,12 +20,18 @@ header {
   font-size: 30px;
   color: #e0f1ff;
   background-color: #2783d9;
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.2);
+}
+
+nav li {
+  list-style: none;
+  display: inline-block;
+  margin: 1em;
 }
 
 article {
   text-align: left;
-  background-color: #9cd4ff;
+  background-color: #b5dfff;
   margin: 1em;
   padding: 1em;
   box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
@@ -44,4 +50,8 @@ p {
 .memo-section {
   margin-block-start: 0px;
   margin-block-end: 0px;
+}
+
+.content{
+
 }

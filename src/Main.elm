@@ -20,7 +20,10 @@ type alias Model =
 
 
 type alias Memo =
-    { id : Int, title : String, content : String }
+    { id : Int
+    , title : String
+    , content : String
+    }
 
 
 type Page
@@ -31,7 +34,12 @@ type Page
 
 init : ( Model, Cmd Msg )
 init =
-    ( { page = Home, memos = [], memo = { id = 2, title = "", content = "" } }, Cmd.none )
+    ( { page = Home, memos = [], memo = emptyMemo }, Cmd.none )
+
+
+emptyMemo : Memo
+emptyMemo =
+    { id = 0, title = "", content = "" }
 
 
 
@@ -53,7 +61,15 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         PressCreate ->
-            ( { model | page = Create }, Cmd.none )
+            case model.page of
+                Home ->
+                    ( { model | page = Create }, Cmd.none )
+
+                Create ->
+                    ( model, Cmd.none )
+
+                Edit ->
+                    ( { model | page = Create, memo = emptyMemo, memos = model.memos |> List.append [ model.memo ] }, Cmd.none )
 
         PressHome ->
             case model.page of
@@ -67,13 +83,13 @@ update msg model =
                     ( { model | page = Home, memos = model.memos |> List.append [ model.memo ] }, Cmd.none )
 
         CreateMemo ->
-            ( { page = Home, memos = List.append model.memos [ model.memo ], memo = { id = 1, title = "", content = "" } }, Cmd.none )
+            ( { page = Home, memos = createMemo model.memos model.memo, memo = emptyMemo }, Cmd.none )
 
         PressEdit memo ->
             ( { model | page = Edit, memo = memo, memos = remove memo model.memos }, Cmd.none )
 
         EditMemo ->
-            ( { page = Home, memos = List.append model.memos [ model.memo ], memo = { id = 1, title = "", content = "" } }, Cmd.none )
+            ( { page = Home, memos = createMemo model.memos model.memo, memo = emptyMemo }, Cmd.none )
 
         PressDelete memo ->
             ( { model | memos = remove memo model.memos }, Cmd.none )
@@ -85,6 +101,11 @@ update msg model =
             ( { model | memo = { id = model.memo.id, title = model.memo.title, content = content } }, Cmd.none )
 
 
+createMemo : List Memo -> Memo -> List Memo
+createMemo memos memo =
+    List.append memos [ memo ]
+
+
 
 ---- VIEW ----
 
@@ -94,41 +115,30 @@ view model =
     div []
         [ header [] [ text "Elm Memo PWA" ]
         , nav []
-            [ button [ onClick PressHome ] [ text "Home" ]
-            , button [ onClick PressCreate ] [ text "Create" ]
+            [ ul []
+                [ li [] [ button [ onClick PressHome ] [ text "Home" ] ]
+                , li [] [ button [ onClick PressCreate ] [ text "Create" ] ]
+                ]
             ]
         , case model.page of
             Home ->
-                section [] (memolist model.memos)
+                section [] (memoList model.memos)
 
             Create ->
-                section []
-                    [ viewInput "text" "title" model.memo.title Title
-                    , viewInput "text" "content" model.memo.content Content
-                    , button [ onClick CreateMemo ] [ text "Create" ]
-                    ]
+                section [] (memoForm model.memo "Create")
 
             Edit ->
-                section []
-                    [ viewInput "text" "title" model.memo.title Title
-                    , viewInput "text" "content" model.memo.content Content
-                    , button [ onClick EditMemo ] [ text "Update" ]
-                    ]
+                section [] (memoForm model.memo "Update")
         ]
 
 
-viewInput : String -> String -> String -> (String -> Msg) -> Html Msg
-viewInput t p v toMsg =
-    input [ type_ t, placeholder p, value v, onInput toMsg ] []
+memoList : List Memo -> List (Html Msg)
+memoList memos =
+    List.map memoArticle memos
 
 
-memolist : List Memo -> List (Html Msg)
-memolist memos =
-    List.map memoarticle memos
-
-
-memoarticle : Memo -> Html Msg
-memoarticle memo =
+memoArticle : Memo -> Html Msg
+memoArticle memo =
     article []
         [ div []
             [ -- p [] [ text (fromInt memo.id) ]
@@ -142,6 +152,19 @@ memoarticle memo =
             [ onClick (PressDelete memo) ]
             [ text "Delete" ]
         ]
+
+
+memoForm : Memo -> String -> List (Html Msg)
+memoForm memo buttonText =
+    [ viewInput "text" "title" memo.title Title
+    , viewInput "text" "content" memo.content Content
+    , button [ onClick CreateMemo ] [ text buttonText ]
+    ]
+
+
+viewInput : String -> String -> String -> (String -> Msg) -> Html Msg
+viewInput t p v toMsg =
+    input [ type_ t, class p, placeholder p, value v, onInput toMsg ] []
 
 
 
