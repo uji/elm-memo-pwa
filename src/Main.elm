@@ -5,6 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import List.Extra exposing (..)
+import Memo exposing (..)
 import String exposing (..)
 
 
@@ -19,13 +20,6 @@ type alias Model =
     }
 
 
-type alias Memo =
-    { id : Int
-    , title : String
-    , content : String
-    }
-
-
 type Page
     = Home
     | Create
@@ -35,11 +29,6 @@ type Page
 init : ( Model, Cmd Msg )
 init =
     ( { page = Home, memos = [], memo = emptyMemo }, Cmd.none )
-
-
-emptyMemo : Memo
-emptyMemo =
-    { id = 0, title = "", content = "" }
 
 
 
@@ -99,11 +88,6 @@ update msg model =
 
         Content content ->
             ( { model | memo = { id = model.memo.id, title = model.memo.title, content = content } }, Cmd.none )
-
-
-createMemo : List Memo -> Memo -> List Memo
-createMemo memos memo =
-    List.append memos [ memo ]
 
 
 
