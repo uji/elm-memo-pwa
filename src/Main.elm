@@ -4,6 +4,8 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import List.Extra exposing (..)
+import String exposing (..)
 
 
 
@@ -29,7 +31,7 @@ type Page
 
 init : ( Model, Cmd Msg )
 init =
-    ( { page = Home, memos = [ { id = 1, title = "a", content = "text" } ], memo = { id = 2, title = "", content = "" } }, Cmd.none )
+    ( { page = Home, memos = [], memo = { id = 2, title = "", content = "" } }, Cmd.none )
 
 
 
@@ -40,6 +42,7 @@ type Msg
     = PressCreate
     | PressHome
     | CreateMemo
+    | DeleteMemo Memo
     | Title String
     | Content String
 
@@ -55,6 +58,9 @@ update msg model =
 
         CreateMemo ->
             ( { page = Home, memos = List.append model.memos [ model.memo ], memo = { id = 1, title = "", content = "" } }, Cmd.none )
+
+        DeleteMemo memo ->
+            ( { model | memos = remove memo model.memos }, Cmd.none )
 
         Title title ->
             ( { model | memo = { id = model.memo.id, title = title, content = model.memo.content } }, Cmd.none )
@@ -105,14 +111,15 @@ memoarticle : Memo -> Html Msg
 memoarticle memo =
     article []
         [ div []
-            [ h1 [] [ text memo.title ]
+            [ -- p [] [ text (fromInt memo.id) ]
+              h1 [] [ text memo.title ]
             , p [] [ text memo.content ]
             ]
         , button
             []
             [ text "Edit" ]
         , button
-            []
+            [ onClick (DeleteMemo memo) ]
             [ text "Delete" ]
         ]
 
