@@ -5,30 +5,30 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import List.Extra exposing (..)
-import Memo exposing (..)
+import BackLog exposing (..)
 import String exposing (..)
 
 
 
 ---- MODEL ----
 
-
 type alias Model =
-    { page : Page
-    , memos : List Memo
-    , memo : Memo
+    { mode : Mode
+    , backLog : BackLog
+    , backLogItemParam : BackLogItem
     }
 
 
-type Page
-    = Home
+type Mode
+    = View
     | Create
     | Edit
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { page = Home, memos = [], memo = emptyMemo }, Cmd.none )
+    ( Model View emptyBackLog emptyBackLogItem
+    , Cmd.none )
 
 
 
@@ -37,57 +37,55 @@ init =
 
 type Msg
     = PressCreate
-    | PressHome
-    | CreateMemo
-    | PressEdit Memo
-    | EditMemo
-    | PressDelete Memo
+    | CreateBackLogItem
+    | PressEdit BackLogItem
+    | EditBackLogItem
+    | PressDelete BackLogItem
     | Title String
-    | Content String
+    | Description String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         PressCreate ->
-            case model.page of
-                Home ->
-                    ( { model | page = Create }, Cmd.none )
+            case model.mode of
+                View ->
+                    ( { model | mode = Create }, Cmd.none )
 
                 Create ->
                     ( model, Cmd.none )
 
                 Edit ->
-                    ( { model | page = Create, memo = emptyMemo, memos = model.memos |> List.append [ model.memo ] }, Cmd.none )
+                    ( Model Create model.backLog emptyBackLogItem, Cmd.none )
+        CreateBackLogItem ->
+            let
+              newBackLog = createBackLogItem model.backLog model.backLogItemParam
+            in
+              ( Model View newBackLog emptyBackLogItem, Cmd.none )
 
-        PressHome ->
-            case model.page of
-                Home ->
-                    ( model, Cmd.none )
+        PressEdit backLogItem ->
+            ( model, Cmd.none )
 
-                Create ->
-                    ( { model | page = Home }, Cmd.none )
+        EditBackLogItem ->
+            ( model, Cmd.none )
 
-                Edit ->
-                    ( { model | page = Home, memos = model.memos |> List.append [ model.memo ] }, Cmd.none )
-
-        CreateMemo ->
-            ( { page = Home, memos = createMemo model.memos model.memo, memo = emptyMemo }, Cmd.none )
-
-        PressEdit memo ->
-            ( { model | page = Edit, memo = memo, memos = remove memo model.memos }, Cmd.none )
-
-        EditMemo ->
-            ( { page = Home, memos = createMemo model.memos model.memo, memo = emptyMemo }, Cmd.none )
-
-        PressDelete memo ->
-            ( { model | memos = remove memo model.memos }, Cmd.none )
+        PressDelete backLogItem ->
+            ( model, Cmd.none )
 
         Title title ->
-            ( { model | memo = { id = model.memo.id, title = title, content = model.memo.content } }, Cmd.none )
+            let
+              a = model.backLogItemParam
+              b = { a | title = title }
+            in
+              ( { model | backLogItemParam = b  }, Cmd.none )
 
-        Content content ->
-            ( { model | memo = { id = model.memo.id, title = model.memo.title, content = content } }, Cmd.none )
+        Description description ->
+            let
+              a = model.backLogItemParam
+              b = { a | description = description }
+            in
+              ( { model | backLogItemParam = b  }, Cmd.none )
 
 
 
@@ -100,49 +98,48 @@ view model =
         [ header [] [ text "Elm Memo PWA" ]
         , nav []
             [ ul []
-                [ li [] [ button [ onClick PressHome ] [ text "Home" ] ]
-                , li [] [ button [ onClick PressCreate ] [ text "Create" ] ]
+                [ li [] [ button [ onClick PressCreate ] [ text "Create" ] ]
                 ]
             ]
-        , case model.page of
-            Home ->
-                section [] (memoList model.memos)
+        , case model.mode of
+            View ->
+                backLogItemList model.backLog.backLogItems |> section []
 
             Create ->
-                section [] (memoForm model.memo "Create")
+                section [] (backLogItemForm model.backLogItemParam "Create")
 
             Edit ->
-                section [] (memoForm model.memo "Update")
+                section [] (backLogItemForm model.backLogItemParam "Update")
         ]
 
 
-memoList : List Memo -> List (Html Msg)
-memoList memos =
-    List.map memoArticle memos
+backLogItemList : List BackLogItem -> List (Html Msg)
+backLogItemList backLogItem =
+    List.map backLogItemArticle backLogItem
 
 
-memoArticle : Memo -> Html Msg
-memoArticle memo =
+backLogItemArticle : BackLogItem -> Html Msg
+backLogItemArticle backLogItem =
     article []
         [ div []
             [ -- p [] [ text (fromInt memo.id) ]
-              h1 [] [ text memo.title ]
-            , p [] [ text memo.content ]
+              h1 [] [ text backLogItem.title ]
+            , p [] [ text backLogItem.description ]
             ]
         , button
-            [ onClick (PressEdit memo) ]
+            [ onClick (PressEdit backLogItem) ]
             [ text "Edit" ]
         , button
-            [ onClick (PressDelete memo) ]
+            [ onClick (PressDelete backLogItem) ]
             [ text "Delete" ]
         ]
 
 
-memoForm : Memo -> String -> List (Html Msg)
-memoForm memo buttonText =
-    [ viewInput "text" "title" memo.title Title
-    , viewInput "text" "content" memo.content Content
-    , button [ onClick CreateMemo ] [ text buttonText ]
+backLogItemForm : BackLogItem -> String -> List (Html Msg)
+backLogItemForm backLogItem buttonText =
+    [ viewInput "text" "title" backLogItem.title Title
+    , viewInput "text" "description" backLogItem.description Description
+    , button [ onClick CreateBackLogItem ] [ text buttonText ]
     ]
 
 

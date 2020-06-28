@@ -16,10 +16,14 @@ emptyBackLog : BackLog
 emptyBackLog =
   BackLog [] 1
 
-registerBackLogItem : BackLog -> String -> String -> Int -> BackLog
-registerBackLogItem backLog title description storyPoint =
+emptyBackLogItem : BackLogItem
+emptyBackLogItem =
+  BackLogItem 0 "" "" 0
+
+createBackLogItem : BackLog -> BackLogItem -> BackLog
+createBackLogItem backLog backLogItem =
   { backLogItems =
-    [ BackLogItem backLog.nextId title description storyPoint ]
+    [ BackLogItem backLog.nextId backLogItem.title backLogItem.description backLogItem.storyPoint ]
     |> List.append backLog.backLogItems
   , nextId = backLog.nextId + 1
   }
