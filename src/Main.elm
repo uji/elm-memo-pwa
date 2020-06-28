@@ -1,16 +1,18 @@
 module Main exposing (..)
 
+import BackLog exposing (..)
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Json.Encode as E
 import List.Extra exposing (..)
-import BackLog exposing (..)
 import String exposing (..)
 
 
 
 ---- MODEL ----
+
 
 type alias Model =
     { mode : Mode
@@ -28,7 +30,8 @@ type Mode
 init : ( Model, Cmd Msg )
 init =
     ( Model View emptyBackLog emptyBackLogItem
-    , Cmd.none )
+    , readBackLogCmd ()
+    )
 
 
 
@@ -43,6 +46,7 @@ type Msg
     | PressDelete BackLogItem
     | Title String
     | Description String
+    | ReadStore String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -58,11 +62,13 @@ update msg model =
 
                 Edit ->
                     ( Model Create model.backLog emptyBackLogItem, Cmd.none )
+
         CreateBackLogItem ->
             let
-              newBackLog = createBackLogItem model.backLog model.backLogItemParam
+                newBackLog =
+                    createBackLogItem model.backLog model.backLogItemParam
             in
-              ( Model View newBackLog emptyBackLogItem, saveBackLogItem model.backLogItemParam)
+            ( Model View newBackLog emptyBackLogItem, saveBackLog newBackLog )
 
         PressEdit backLogItem ->
             ( model, Cmd.none )
@@ -72,24 +78,36 @@ update msg model =
 
         PressDelete backLogItem ->
             let
-              backLogItems = remove backLogItem model.backLog.backLogItems
-              backLog = BackLog backLogItems model.backLog.nextId
+                backLogItems =
+                    remove backLogItem model.backLog.backLogItems
+
+                backLog =
+                    BackLog backLogItems model.backLog.nextId
             in
-              ( { model | backLog = backLog }, Cmd.none )
+            ( { model | backLog = backLog }, Cmd.none )
 
         Title title ->
             let
-              a = model.backLogItemParam
-              b = { a | title = title }
+                old =
+                    model.backLogItemParam
+
+                new =
+                    { old | title = title }
             in
-              ( { model | backLogItemParam = b  }, Cmd.none )
+            ( { model | backLogItemParam = new }, Cmd.none )
 
         Description description ->
             let
-              a = model.backLogItemParam
-              b = { a | description = description }
+                old =
+                    model.backLogItemParam
+
+                new =
+                    { old | description = description }
             in
-              ( { model | backLogItemParam = b  }, Cmd.none )
+            ( { model | backLogItemParam = new }, Cmd.none )
+
+        ReadStore backLogJson ->
+            ( { model | backLog = decodeBackLog backLogJson }, Cmd.none )
 
 
 
@@ -108,13 +126,13 @@ view model =
         , backLogItemList model.backLog.backLogItems |> section []
         , case model.mode of
             View ->
-              section [] []
+                section [] []
 
             Create ->
-              section [] (backLogItemForm model.backLogItemParam "Create")
+                section [] (backLogItemForm model.backLogItemParam "Create")
 
             Edit ->
-              section [] []
+                section [] []
         ]
 
 
@@ -131,6 +149,7 @@ backLogItemArticle backLogItem =
               h1 [] [ text backLogItem.title ]
             , p [] [ text backLogItem.description ]
             ]
+
         -- , button
         --     [ onClick (PressEdit backLogItem) ]
         --     [ text "Edit" ]
@@ -151,6 +170,16 @@ backLogItemForm backLogItem buttonText =
 viewInput : String -> String -> String -> (String -> Msg) -> Html Msg
 viewInput t p v toMsg =
     input [ type_ t, class p, placeholder p, value v, onInput toMsg ] []
+
+
+
+---- SUBSCRIPTION ----
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.batch
+        [ readBackLogSub ReadStore ]
 
 
 
