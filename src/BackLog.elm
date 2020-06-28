@@ -1,4 +1,4 @@
-module BackLog exposing (..)
+port module BackLog exposing (..)
 
 type alias BackLog =
     { backLogItems : List BackLogItem
@@ -27,3 +27,5 @@ createBackLogItem backLog backLogItem =
     |> List.append backLog.backLogItems
   , nextId = backLog.nextId + 1
   }
+
+port saveBackLogItem : BackLogItem -> Cmd msg

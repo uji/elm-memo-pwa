@@ -62,7 +62,7 @@ update msg model =
             let
               newBackLog = createBackLogItem model.backLog model.backLogItemParam
             in
-              ( Model View newBackLog emptyBackLogItem, Cmd.none )
+              ( Model View newBackLog emptyBackLogItem, saveBackLogItem model.backLogItemParam)
 
         PressEdit backLogItem ->
             ( model, Cmd.none )
@@ -71,7 +71,11 @@ update msg model =
             ( model, Cmd.none )
 
         PressDelete backLogItem ->
-            ( model, Cmd.none )
+            let
+              backLogItems = remove backLogItem model.backLog.backLogItems
+              backLog = BackLog backLogItems model.backLog.nextId
+            in
+              ( { model | backLog = backLog }, Cmd.none )
 
         Title title ->
             let
@@ -101,15 +105,16 @@ view model =
                 [ li [] [ button [ onClick PressCreate ] [ text "Create" ] ]
                 ]
             ]
+        , backLogItemList model.backLog.backLogItems |> section []
         , case model.mode of
             View ->
-                backLogItemList model.backLog.backLogItems |> section []
+              section [] []
 
             Create ->
-                section [] (backLogItemForm model.backLogItemParam "Create")
+              section [] (backLogItemForm model.backLogItemParam "Create")
 
             Edit ->
-                section [] (backLogItemForm model.backLogItemParam "Update")
+              section [] []
         ]
 
 
@@ -126,9 +131,9 @@ backLogItemArticle backLogItem =
               h1 [] [ text backLogItem.title ]
             , p [] [ text backLogItem.description ]
             ]
-        , button
-            [ onClick (PressEdit backLogItem) ]
-            [ text "Edit" ]
+        -- , button
+        --     [ onClick (PressEdit backLogItem) ]
+        --     [ text "Edit" ]
         , button
             [ onClick (PressDelete backLogItem) ]
             [ text "Delete" ]
